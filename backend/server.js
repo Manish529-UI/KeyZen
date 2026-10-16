@@ -12,19 +12,23 @@ const { apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
-// Middleware — CORS configured for frontend & browser extension
+// Middleware — CORS configured for frontend, Vercel deployments & browser extension
 const allowedOrigins = [
   'http://localhost:5173',  // Vite dev server
   'http://localhost:5000',  // Backend (self)
-];
+  process.env.CLIENT_URL,   // Production frontend URL (Vercel)
+].filter(Boolean);
+
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
     // Allow Chrome extension origins (chrome-extension://...)
     if (origin.startsWith('chrome-extension://')) return callback(null, true);
+    // Allow any Vercel preview or production deployment (*.vercel.app)
+    if (origin.endsWith('.vercel.app') || origin === 'https://vercel.app') return callback(null, true);
     // Allow whitelisted origins
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (allowedOrigins.some(o => origin === o || origin.startsWith(o))) return callback(null, true);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -33,6 +37,11 @@ app.use(express.json());
 
 // Global API rate limiter (100 requests per 15 min)
 app.use('/api', apiLimiter);
+
+// Root route for Render liveness & info
+app.get('/', (req, res) => {
+  res.json({ message: 'KeyZen Backend API is running', status: 'healthy', docs: '/api/health' });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
