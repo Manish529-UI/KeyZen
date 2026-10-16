@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 
 // Check if real email credentials are configured
 const isEmailConfigured = () => {
+  if (process.env.BREVO_API_KEY) return true;
   if (process.env.RESEND_API_KEY) return true;
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
@@ -109,7 +110,48 @@ const sendOTPEmail = async (to, otp, name) => {
     `,
   };
 
-  // 1. Try Resend HTTPS API if API Key is configured (100% works on Render Free Tier via port 443)
+  // 1. Try Brevo HTTPS API if configured (Sends to ANY recipient globally, 300/day free, Port 443)
+  if (process.env.BREVO_API_KEY) {
+    try {
+      const senderEmail = (process.env.EMAIL_FROM && process.env.EMAIL_FROM.includes('<'))
+        ? process.env.EMAIL_FROM.match(/<([^>]+)>/)?.[1]
+        : (process.env.EMAIL_USER || 'sharmamanish8816@gmail.com');
+
+      const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: {
+            name: 'KeyZen Security',
+            email: senderEmail,
+          },
+          to: [{ email: to, name: name || 'KeyZen User' }],
+          subject: '🔐 KeyZen - Your Login Verification Code',
+          htmlContent: mailOptions.html,
+        }),
+      });
+
+      if (brevoRes.ok) {
+        console.log(`[Brevo API] OTP email successfully delivered to ${to}`);
+        return { sent: true };
+      } else {
+        const errorData = await brevoRes.json().catch(() => ({}));
+        console.warn('[Brevo API] Delivery error:', errorData);
+        return {
+          sent: false,
+          error: errorData.message || 'Brevo email delivery failed.',
+        };
+      }
+    } catch (err) {
+      console.warn('[Brevo API] Request failed:', err.message);
+    }
+  }
+
+  // 2. Try Resend HTTPS API if API Key is configured
   if (process.env.RESEND_API_KEY) {
     try {
       const resendRes = await fetch('https://api.resend.com/emails', {
