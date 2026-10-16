@@ -27,20 +27,45 @@ export function AuthProvider({ children }) {
     checkAuth();
   }, []);
 
+  const logout = useCallback(() => {
+    localStorage.removeItem('keyzen_token');
+    setUser(null);
+  }, []);
+
+  // Auto-lock: track setting reactively so timer updates without page reload
+  const [autoLockMinutes, setAutoLockMinutes] = useState(
+    () => parseInt(localStorage.getItem('keyzen_autolock') || '0')
+  );
+
+  // Listen for auto-lock setting changes (same tab and cross-tab)
+  useEffect(() => {
+    const syncAutoLock = () => {
+      setAutoLockMinutes(parseInt(localStorage.getItem('keyzen_autolock') || '0'));
+    };
+
+    // Cross-tab changes fire 'storage'; same-tab changes need a custom event
+    window.addEventListener('storage', syncAutoLock);
+    window.addEventListener('keyzen_autolock_changed', syncAutoLock);
+
+    return () => {
+      window.removeEventListener('storage', syncAutoLock);
+      window.removeEventListener('keyzen_autolock_changed', syncAutoLock);
+    };
+  }, []);
+
   // Auto-lock: log out after inactivity
   useEffect(() => {
-    const minutes = parseInt(localStorage.getItem('keyzen_autolock') || '0');
-    if (!minutes || !user) return;
+    if (!autoLockMinutes || !user) return;
 
     let timer;
     const resetTimer = () => {
       clearTimeout(timer);
       timer = setTimeout(() => {
         logout();
-      }, minutes * 60 * 1000);
+      }, autoLockMinutes * 60 * 1000);
     };
 
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
     events.forEach((e) => window.addEventListener(e, resetTimer));
     resetTimer();
 
@@ -48,7 +73,7 @@ export function AuthProvider({ children }) {
       clearTimeout(timer);
       events.forEach((e) => window.removeEventListener(e, resetTimer));
     };
-  }, [user]);
+  }, [user, autoLockMinutes, logout]);
 
   // Step 1: Login with credentials (returns OTP requirement)
   const login = async (email, password) => {
@@ -69,11 +94,6 @@ export function AuthProvider({ children }) {
     const res = await api.post('/auth/register', { name, email, password });
     return res.data;
   };
-
-  const logout = useCallback(() => {
-    localStorage.removeItem('keyzen_token');
-    setUser(null);
-  }, []);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, verifyOTP, register, logout }}>

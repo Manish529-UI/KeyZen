@@ -7,16 +7,19 @@ const VaultContext = createContext();
 export function VaultProvider({ children }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { user } = useAuth();
 
   const fetchItems = useCallback(async () => {
     if (!user) return;
     try {
       setLoading(true);
+      setError(null);
       const res = await api.get('/vault');
       setItems(res.data);
-    } catch (error) {
-      console.error('Failed to fetch vault items:', error);
+    } catch (err) {
+      console.error('Failed to fetch vault items:', err);
+      setError(err.response?.data?.message || 'Failed to load vault items. Please check server connection.');
     } finally {
       setLoading(false);
     }
@@ -54,7 +57,16 @@ export function VaultProvider({ children }) {
 
   return (
     <VaultContext.Provider
-      value={{ items, loading, fetchItems, addItem, updateItem, deleteItem, toggleFavorite }}
+      value={{
+        items,
+        loading,
+        error,
+        fetchItems,
+        addItem,
+        updateItem,
+        deleteItem,
+        toggleFavorite,
+      }}
     >
       {children}
     </VaultContext.Provider>

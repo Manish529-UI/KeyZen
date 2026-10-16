@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useVault } from '../context/VaultContext';
 import { useToast } from '../context/ToastContext';
 import VaultItemModal from '../components/VaultItemModal';
@@ -22,6 +23,7 @@ function Vault() {
   const { items, loading, addItem, updateItem, deleteItem, toggleFavorite } =
     useVault();
   const { showToast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
@@ -29,6 +31,21 @@ function Vault() {
   const [editItem, setEditItem] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [visiblePasswords, setVisiblePasswords] = useState({});
+
+  // Auto-open modal if navigated with ?edit=itemId
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (editId && items.length > 0) {
+      const target = items.find((i) => i._id === editId);
+      if (target) {
+        setEditItem(target);
+        setShowModal(true);
+        // Clean param from URL
+        searchParams.delete('edit');
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [searchParams, items, setSearchParams]);
 
   // Filter and search
   const filteredItems = items.filter((item) => {

@@ -16,6 +16,7 @@ A modern MERN-stack password manager designed to securely manage user credential
 - **Modern React frontend** — Fully responsive dark/light theme UI
 - **Node.js + Express backend** — RESTful API architecture
 - **MongoDB database** — Secure data storage with Mongoose
+- **Browser Extension** — Chrome/Chromium extension for saving & autofilling passwords
 
 ## Tech Stack
 
@@ -39,6 +40,12 @@ A modern MERN-stack password manager designed to securely manage user credential
 - bcryptjs (Password hashing)
 - Email OTP verification
 - API Rate limiting & Brute force lockouts
+
+**Browser Extension:**
+- Chrome Manifest V3
+- Service Worker (background script)
+- Content Scripts (login form detection)
+- chrome.storage.session (ephemeral token storage)
 
 ## Project Structure
 
@@ -64,6 +71,16 @@ Keyzen/
 │   │   ├── App.jsx          # Main router
 │   │   └── index.css        # Global stylesheet
 │   └── package.json
+│
+├── extension/
+│   ├── manifest.json        # Chrome Manifest V3
+│   ├── background.js        # Service worker (API bridge)
+│   ├── content.js           # Login form detection & UI injection
+│   ├── popup.html           # Extension popup page
+│   ├── popup.js             # Popup logic (auth, dashboard)
+│   ├── popup.css            # Popup styles (KeyZen theme)
+│   ├── icons/               # Extension icons (16/32/48/128px)
+│   └── README.md            # Extension-specific documentation
 │
 └── .gitignore               # Root gitignore to protect secrets
 ```
@@ -122,6 +139,16 @@ The server will start on `http://localhost:5000`.
 npm run dev
 ```
 The application will be accessible at `http://localhost:5173`.
+
+### 7. Load the Browser Extension
+
+1. Open Chrome and go to `chrome://extensions/`
+2. Enable **Developer mode** (toggle in top-right corner)
+3. Click **Load unpacked**
+4. Select the `extension/` folder
+5. Click the KeyZen icon in the toolbar to log in
+
+For detailed extension documentation, see [extension/README.md](extension/README.md).
 
 ## Environment Variables
 

@@ -12,8 +12,23 @@ const { apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Middleware — CORS configured for frontend & browser extension
+const allowedOrigins = [
+  'http://localhost:5173',  // Vite dev server
+  'http://localhost:5000',  // Backend (self)
+];
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    // Allow Chrome extension origins (chrome-extension://...)
+    if (origin.startsWith('chrome-extension://')) return callback(null, true);
+    // Allow whitelisted origins
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 // Global API rate limiter (100 requests per 15 min)

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=420, initial-scale=1.0">
+  <title>KeyZen</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="21" fill="none" viewBox="0 0 48 46">
+            <path fill="#863bff" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"/>
+          </svg>
+        </div>
+        <span class="logo-text">KeyZen</span>
+      </div>
+      <div class="version-badge">v1.0</div>
+    </header>
+
+    <!-- Login Section (shown when not authenticated) -->
+    <section id="login-section" class="section hidden">
+      <div id="login-form">
+        <div class="section-title">Sign in to KeyZen</div>
+        <div class="section-subtitle">Use your KeyZen account credentials</div>
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Master Password</label>
+          <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div id="login-error" class="error-msg hidden"></div>
+        <button id="login-btn" class="btn-primary">Sign In</button>
+      </div>
+
+      <!-- OTP Section -->
+      <div id="otp-form" class="hidden">
+        <div class="section-title">Email Verification</div>
+        <div class="section-subtitle">Enter the 6-digit code sent to your email</div>
+        <div class="form-group">
+          <label for="otp-input">Verification Code</label>
+          <input type="text" id="otp-input" placeholder="000000" maxlength="6" autocomplete="one-time-code" style="text-align: center; letter-spacing: 8px; font-size: 20px; font-weight: 600;">
+        </div>
+        <div id="otp-error" class="error-msg hidden"></div>
+        <button id="otp-btn" class="btn-primary">Verify</button>
+        <button id="resend-otp-btn" class="btn-ghost">Resend Code</button>
+        <button id="back-to-login-btn" class="btn-ghost">← Back to Login</button>
+      </div>
+    </section>
+
+    <!-- Authenticated Section -->
+    <section id="auth-section" class="section hidden">
+      <!-- User Info -->
+      <div class="user-card">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">—</div>
+          <div class="user-email" id="user-email">—</div>
+        </div>
+        <div class="status-dot active" title="Connected"></div>
+      </div>
+
+      <!-- Current Site Info -->
+      <div class="site-card" id="site-card">
+        <div class="site-card-header">
+          <span class="site-icon">🌐</span>
+          <span class="site-domain" id="current-domain">—</span>
+        </div>
+        <div class="site-matches" id="site-matches">
+          <span class="match-count" id="match-count">0</span> saved credential(s)
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button id="open-vault-btn" class="btn-action">
+          <span class="action-icon">🔒</span>
+          <span>Open KeyZen Vault</span>
+        </button>
+        <button id="settings-btn" class="btn-action">
+          <span class="action-icon">⚙️</span>
+          <span>Settings</span>
+        </button>
+      </div>
+
+      <!-- Logout -->
+      <div class="footer-actions">
+        <button id="logout-btn" class="btn-danger-ghost">Sign Out</button>
+      </div>
+    </section>
+
+    <!-- Loading State -->
+    <section id="loading-section" class="section">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Connecting to KeyZen…</div>
+    </section>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -60,6 +60,8 @@ function Settings() {
   const handleAutoLockChange = (value) => {
     setAutoLock(value);
     localStorage.setItem('keyzen_autolock', value);
+    // Notify AuthContext timer in same tab (storage event only fires cross-tab)
+    window.dispatchEvent(new Event('keyzen_autolock_changed'));
     showToast(
       value === '0' ? 'Auto-lock disabled' : `Auto-lock set to ${value} minutes`,
       'info'
@@ -248,6 +250,7 @@ function Settings() {
               onChange={(e) => handleAutoLockChange(e.target.value)}
             >
               <option value="0">Never</option>
+              <option value="2">2 minutes</option>
               <option value="5">5 minutes</option>
               <option value="15">15 minutes</option>
               <option value="30">30 minutes</option>
