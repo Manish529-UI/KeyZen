@@ -119,7 +119,9 @@ const sendOTPEmail = async (to, otp, name) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: process.env.EMAIL_FROM || 'KeyZen <onboarding@resend.dev>',
+          from: (process.env.EMAIL_FROM && !process.env.EMAIL_FROM.includes('@gmail.com'))
+            ? process.env.EMAIL_FROM
+            : 'KeyZen Security <onboarding@resend.dev>',
           to: [to],
           subject: '🔐 KeyZen - Your Login Verification Code',
           html: mailOptions.html,
