@@ -134,25 +134,30 @@ const sendOTPEmail = async (to, otp, name) => {
       } else {
         const errorData = await resendRes.json().catch(() => ({}));
         console.warn('[Resend API] Delivery issue:', errorData);
+        return {
+          sent: false,
+          error: errorData.message || 'Resend email delivery failed.',
+        };
       }
     } catch (apiErr) {
       console.warn('[Resend API] Request failed:', apiErr.message);
+      return { sent: false, error: apiErr.message };
     }
   }
 
   // 2. Fallback to Nodemailer SMTP (Gmail)
   try {
     const activeTransporter = getTransporter();
-    if (!activeTransporter) throw new Error('Email credentials are not configured');
+    if (!activeTransporter) throw new Error('Email credentials are not configured. Please add RESEND_API_KEY or EMAIL_USER/EMAIL_PASS in Render.');
     await activeTransporter.sendMail(mailOptions);
     console.log(`OTP email sent to ${to}`);
     return { sent: true };
   } catch (error) {
     console.warn(`[KeyZen Auth] Email send failed (${error.message}). Notice: Render Free Tier blocks outbound SMTP ports 465/587.`);
-    console.log('\n========================================');
-    console.log(`  🔐 KEYZEN OTP FOR ${to}: ${otp}`);
-    console.log('========================================\n');
-    return { sent: false, devMode: true, otp, error: error.message };
+    return {
+      sent: false,
+      error: `Failed to send email: ${error.message}. (Render Free Tier blocks Gmail SMTP; use Resend API with your registered email).`,
+    };
   }
 };
 

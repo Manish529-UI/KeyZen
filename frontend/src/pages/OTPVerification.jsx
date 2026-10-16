@@ -19,8 +19,7 @@ function OTPVerification() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { tempToken, email, devOtp } = location.state || {};
-  const [currentDevOtp, setCurrentDevOtp] = useState(devOtp || '');
+  const { tempToken, email } = location.state || {};
 
   // Redirect if no temp token
   useEffect(() => {
@@ -165,9 +164,6 @@ function OTPVerification() {
     try {
       const res = await api.post('/auth/resend-otp', { tempToken });
       showToast(res.data.message || 'New verification code sent!', 'success');
-      if (res.data.devOtp) {
-        setCurrentDevOtp(res.data.devOtp);
-      }
       setCountdown(300);
       setResendCooldown(30); // 30 seconds before next resend
       setOtp(['', '', '', '', '', '']);
@@ -216,43 +212,7 @@ function OTPVerification() {
           </span>
         </div>
 
-        {currentDevOtp && (
-          <div
-            className="otp-dev-banner"
-            style={{
-              background: 'rgba(57, 120, 246, 0.12)',
-              border: '1px dashed #3978F6',
-              padding: '10px 14px',
-              borderRadius: '8px',
-              marginBottom: '16px',
-              fontSize: '13px',
-              color: '#A0AEC0',
-              textAlign: 'center',
-            }}
-          >
-            <span>
-              Cloud Free Tier Notice: Verification code is{' '}
-              <strong
-                style={{
-                  color: '#F1F5F9',
-                  letterSpacing: '2px',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                }}
-                onClick={() => {
-                  const digits = currentDevOtp.split('');
-                  setOtp(digits);
-                  inputRefs.current[5]?.focus();
-                  handleVerify(currentDevOtp);
-                }}
-                title="Click to auto-fill and verify"
-              >
-                {currentDevOtp}
-              </strong>{' '}
-              (Click to auto-verify)
-            </span>
-          </div>
-        )}
+
 
         <form className="auth-form" onSubmit={handleSubmit}>
           {/* OTP Input Boxes */}

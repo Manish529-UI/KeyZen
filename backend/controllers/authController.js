@@ -124,26 +124,24 @@ const login = async (req, res) => {
     user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
     await user.save({ validateModifiedOnly: true });
 
-    // Send OTP email (handles dev mode fallback & cloud timeouts gracefully)
+    // Send OTP email
     const emailResult = await sendOTPEmail(user.email, otp, user.name);
+
+    if (!emailResult?.sent) {
+      return res.status(400).json({
+        message: emailResult?.error || 'Failed to send verification code to your email. Please try again.',
+      });
+    }
 
     // Return temp token (can only be used for OTP verification)
     const tempToken = generateTempToken(user._id);
 
-    const response = {
+    res.json({
       requireOTP: true,
       tempToken,
       email: user.email,
-      message: emailResult?.sent
-        ? 'Verification code sent to your email'
-        : 'Notice: Outbound email blocked by cloud host. Verification code is available in Render logs or displayed below for testing.',
-    };
-
-    if (!emailResult?.sent && emailResult?.otp) {
-      response.devOtp = emailResult.otp;
-    }
-
-    res.json(response);
+      message: 'Verification code sent to your email',
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: error.message || 'Server error' });
@@ -243,17 +241,15 @@ const resendOTP = async (req, res) => {
 
     const emailResult = await sendOTPEmail(user.email, otp, user.name);
 
-    const response = {
-      message: emailResult?.sent
-        ? 'New verification code sent to your email'
-        : 'New verification code generated (check console or use code below)',
-    };
-
-    if (!emailResult?.sent && emailResult?.otp) {
-      response.devOtp = emailResult.otp;
+    if (!emailResult?.sent) {
+      return res.status(400).json({
+        message: emailResult?.error || 'Failed to send verification code to your email.',
+      });
     }
 
-    res.json(response);
+    res.json({
+      message: 'New verification code sent to your email',
+    });
   } catch (error) {
     console.error('Resend OTP error:', error);
     res.status(500).json({ message: error.message || 'Server error' });
