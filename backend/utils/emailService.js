@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 
 // Check if real email credentials are configured
 const isEmailConfigured = () => {
+  if (process.env.RESEND_API_KEY) return true;
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
   return user && pass && !user.includes('your_email') && !pass.includes('your_gmail');
@@ -108,6 +109,36 @@ const sendOTPEmail = async (to, otp, name) => {
     `,
   };
 
+  // 1. Try Resend HTTPS API if API Key is configured (100% works on Render Free Tier via port 443)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: process.env.EMAIL_FROM || 'KeyZen <onboarding@resend.dev>',
+          to: [to],
+          subject: '🔐 KeyZen - Your Login Verification Code',
+          html: mailOptions.html,
+        }),
+      });
+
+      if (resendRes.ok) {
+        console.log(`[Resend API] OTP email successfully delivered to ${to}`);
+        return { sent: true };
+      } else {
+        const errorData = await resendRes.json().catch(() => ({}));
+        console.warn('[Resend API] Delivery issue:', errorData);
+      }
+    } catch (apiErr) {
+      console.warn('[Resend API] Request failed:', apiErr.message);
+    }
+  }
+
+  // 2. Fallback to Nodemailer SMTP (Gmail)
   try {
     const activeTransporter = getTransporter();
     if (!activeTransporter) throw new Error('Email credentials are not configured');
