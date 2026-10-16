@@ -98,6 +98,23 @@ const login = async (req, res) => {
       });
     }
 
+    // Optional bypass for environments where cloud host restricts outbound SMTP (e.g. Render Free Tier)
+    if (process.env.DISABLE_OTP === 'true') {
+      user.loginAttempts = 0;
+      user.lockUntil = null;
+      await user.save({ validateModifiedOnly: true });
+
+      const token = generateToken(user._id);
+      return res.json({
+        requireOTP: false,
+        token,
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        message: 'Login successful',
+      });
+    }
+
     // Password correct — generate OTP and send via email
     const otp = generateOTP();
     const hashedOTP = await hashOTP(otp);
@@ -107,7 +124,7 @@ const login = async (req, res) => {
     user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
     await user.save({ validateModifiedOnly: true });
 
-    // Send OTP email (handles dev mode fallback internally)
+    // Send OTP email (handles dev mode fallback & cloud timeouts gracefully)
     const emailResult = await sendOTPEmail(user.email, otp, user.name);
 
     // Return temp token (can only be used for OTP verification)
@@ -117,8 +134,14 @@ const login = async (req, res) => {
       requireOTP: true,
       tempToken,
       email: user.email,
-      message: 'Verification code sent to your email',
+      message: emailResult?.sent
+        ? 'Verification code sent to your email'
+        : 'Notice: Outbound email blocked by cloud host. Verification code is available in Render logs or displayed below for testing.',
     };
+
+    if (!emailResult?.sent && emailResult?.otp) {
+      response.devOtp = emailResult.otp;
+    }
 
     res.json(response);
   } catch (error) {
@@ -221,8 +244,14 @@ const resendOTP = async (req, res) => {
     const emailResult = await sendOTPEmail(user.email, otp, user.name);
 
     const response = {
-      message: 'New verification code sent to your email',
+      message: emailResult?.sent
+        ? 'New verification code sent to your email'
+        : 'New verification code generated (check console or use code below)',
     };
+
+    if (!emailResult?.sent && emailResult?.otp) {
+      response.devOtp = emailResult.otp;
+    }
 
     res.json(response);
   } catch (error) {

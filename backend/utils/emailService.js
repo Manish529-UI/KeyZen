@@ -17,6 +17,9 @@ const getTransporter = () => {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      connectionTimeout: 4000, // 4s timeout prevents hanging on Render free tier
+      greetingTimeout: 4000,
+      socketTimeout: 5000,
     });
   }
   return transporter;
@@ -112,8 +115,11 @@ const sendOTPEmail = async (to, otp, name) => {
     console.log(`OTP email sent to ${to}`);
     return { sent: true };
   } catch (error) {
-    console.error('Email send error:', error.message);
-    throw new Error('Failed to send verification email. Please try again later.');
+    console.warn(`[KeyZen Auth] Email send failed (${error.message}). Notice: Render Free Tier blocks outbound SMTP ports 465/587.`);
+    console.log('\n========================================');
+    console.log(`  🔐 KEYZEN OTP FOR ${to}: ${otp}`);
+    console.log('========================================\n');
+    return { sent: false, devMode: true, otp, error: error.message };
   }
 };
 

@@ -78,7 +78,10 @@ export function AuthProvider({ children }) {
   // Step 1: Login with credentials (returns OTP requirement)
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
-    // Don't set user yet — OTP verification is needed
+    if (!res.data.requireOTP && res.data.token) {
+      localStorage.setItem('keyzen_token', res.data.token);
+      setUser(res.data.user || { _id: res.data._id, name: res.data.name, email: res.data.email });
+    }
     return res.data;
   };
 

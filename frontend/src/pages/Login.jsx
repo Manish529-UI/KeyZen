@@ -35,6 +35,7 @@ function Login() {
           state: {
             tempToken: response.tempToken,
             email: response.email,
+            devOtp: response.devOtp,
           },
         });
       } else {
