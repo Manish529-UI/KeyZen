@@ -52,6 +52,44 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Diagnostic check for SMTP / Email config on Render
+app.get('/api/test-smtp', (req, res) => {
+  const nodemailer = require('nodemailer');
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+  const hasResend = !!process.env.RESEND_API_KEY;
+
+  if (!user || !pass) {
+    return res.json({
+      configured: false,
+      hasResend,
+      error: 'EMAIL_USER or EMAIL_PASS environment variable is missing on Render.',
+      envKeysPresent: Object.keys(process.env).filter(k => k.includes('EMAIL') || k.includes('RESEND')),
+    });
+  }
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user, pass },
+    connectionTimeout: 6000,
+    greetingTimeout: 6000,
+    socketTimeout: 7000,
+  });
+
+  transporter.verify((err, success) => {
+    if (err) {
+      return res.json({
+        configured: true,
+        hasResend,
+        smtpSuccess: false,
+        error: err.message,
+        code: err.code,
+      });
+    }
+    res.json({ configured: true, hasResend, smtpSuccess: true });
+  });
+});
+
 // Start server
 const PORT = process.env.PORT || 5000;
 
