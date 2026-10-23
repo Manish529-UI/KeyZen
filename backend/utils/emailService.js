@@ -115,7 +115,7 @@ const sendOTPEmail = async (to, otp, name) => {
     try {
       const senderEmail = (process.env.EMAIL_FROM && process.env.EMAIL_FROM.includes('<'))
         ? process.env.EMAIL_FROM.match(/<([^>]+)>/)?.[1]
-        : (process.env.EMAIL_USER || 'sharmamanish8816@gmail.com');
+        : (process.env.EMAIL_USER || 'kachhwalmanish416@gmail.com');
 
       const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',

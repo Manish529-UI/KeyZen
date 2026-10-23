@@ -24,3 +24,5 @@ services:
         sync: false
       - key: CLIENT_URL
         sync: false
+      - key: BREVO_API_KEY
+        sync: false

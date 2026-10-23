@@ -57,14 +57,16 @@ app.get('/api/test-smtp', (req, res) => {
   const nodemailer = require('nodemailer');
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
+  const hasBrevo = !!process.env.BREVO_API_KEY;
   const hasResend = !!process.env.RESEND_API_KEY;
 
   if (!user || !pass) {
     return res.json({
       configured: false,
+      hasBrevo,
       hasResend,
       error: 'EMAIL_USER or EMAIL_PASS environment variable is missing on Render.',
-      envKeysPresent: Object.keys(process.env).filter(k => k.includes('EMAIL') || k.includes('RESEND')),
+      envKeysPresent: Object.keys(process.env).filter(k => k.includes('EMAIL') || k.includes('RESEND') || k.includes('BREVO')),
     });
   }
 
@@ -80,13 +82,14 @@ app.get('/api/test-smtp', (req, res) => {
     if (err) {
       return res.json({
         configured: true,
+        hasBrevo,
         hasResend,
         smtpSuccess: false,
         error: err.message,
         code: err.code,
       });
     }
-    res.json({ configured: true, hasResend, smtpSuccess: true });
+    res.json({ configured: true, hasBrevo, hasResend, smtpSuccess: true });
   });
 });
 
