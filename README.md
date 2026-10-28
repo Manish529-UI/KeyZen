@@ -90,7 +90,7 @@ Keyzen/
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
+git clone <[your-repo-url](https://github.com/Manish529-UI/KeyZen)>
 cd Keyzen
 ```
 
