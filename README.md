@@ -90,8 +90,8 @@ Keyzen/
 ### 1. Clone the repository
 
 ```bash
-git clone <https://github.com/Manish529-UI/KeyZen>
-cd Keyzen
+git clone https://github.com/Manish529-UI/KeyZen.git
+cd KeyZen
 ```
 
 ### 2. Install Frontend Dependencies
